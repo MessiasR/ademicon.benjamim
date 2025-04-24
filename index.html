@@ -59,8 +59,10 @@
     <script>
         setInterval(() => {
             const iframe = document.querySelector("iframe");
-            iframe.src = iframe.src;
-        }, 60000); // 5 minutos
+            const url = new URL(iframe.src);
+            url.searchParams.set('refresh', Date.now()); // adiciona/atualiza o parâmetro "refresh"
+            iframe.src = url.toString();
+            }, 60000);
     </script>
 </body>
 </html>
