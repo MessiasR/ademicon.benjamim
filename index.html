@@ -62,7 +62,7 @@
             const url = new URL(iframe.src);
             url.searchParams.set('refresh', Date.now()); // adiciona/atualiza o parâmetro "refresh"
             iframe.src = url.toString();
-            }, 180000); // refresh a cada 3 minutos
+            }, 300000); // refresh a cada 3 minutos
     </script>
 </body>
 </html>
