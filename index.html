@@ -1,68 +1,131 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADEMICON BENJAMIM</title>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ADEMICON BENJAMIM</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+    }
 
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
 
-        .div {
-            width: 100%;
-            height: 100%;
-            max-width: 100vw;
-            max-height: 100vh;
-            overflow: hidden;
-        }
+    .div {
+      width: 100%;
+      height: 100%;
+      max-width: 100vw;
+      max-height: 100vh;
+      overflow: hidden;
+    }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
 
-        /* Responsividade adicional se quiser personalizar mais */
-        @media (max-width: 768px) {
-            .div {
-                padding: 0;
-            }
+    /* PLAYER DE MÚSICA */
+    .music-player {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: transparent;
+      padding: 8px;
+      border-radius: 10px;
+      color: black;
+      font-family: sans-serif;
+      text-align: left;
+      font-size: 0.8rem; /* tamanho de texto reduzido */
+      transform: scale(0.8); /* reduz todo o player em 20% */
+      transform-origin: bottom right;
+    }
 
-            iframe {
-                height: 100vh;
-                width: 100vw;
-            }
-        }
-    </style>
+    .music-player button {
+      background: transparent;
+      border: 1px solid black;
+      color: black;
+      margin: 4px 0 0 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      border-radius: 5px;
+      transition: background 0.3s;
+      font-size: 0.75rem; /* texto menor nos botões */
+    }
+
+    .music-player button:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .music-player audio {
+      width: 100%;
+      margin-top: 8px;
+      background: transparent;
+    }
+
+    @media (max-width: 768px) {
+      .div {
+        padding: 0;
+      }
+
+      iframe {
+        height: 100vh;
+        width: 100vw;
+      }
+
+      .music-player {
+        bottom: 10px;
+        right: 10px;
+        left: auto;
+        width: 90%;
+        transform: scale(0.75);
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="div">
-        <iframe
-            title="RESULTADO BENJAMIM"
-            src="https://app.powerbi.com/reportEmbed?reportId=3b0dc507-5987-46f5-9a7f-4c5761c4d476&autoAuth=true&ctid=38ae2f02-5710-4e12-80bb-83600c3fdf1e"
-            frameborder="0"
-            allowFullScreen="true">
-        </iframe>
-    </div>
+  <div class="div">
+    <iframe
+      title="RESULTADO BENJAMIM"
+      src="https://app.powerbi.com/reportEmbed?reportId=3b0dc507-5987-46f5-9a7f-4c5761c4d476&autoAuth=true&ctid=38ae2f02-5710-4e12-80bb-83600c3fdf1e"
+      frameborder="0"
+      allowFullScreen="true">
+    </iframe>
+  </div>
 
-    <script>
-        setInterval(() => {
-            const iframe = document.querySelector("iframe");
-            const url = new URL(iframe.src);
-            url.searchParams.set('refresh', Date.now()); // adiciona/atualiza o parâmetro "refresh"
-            iframe.src = url.toString();
-            }, 600000); // refresh a cada 10 minutos
-    </script>
+  <!-- Player de música -->
+  <div class="music-player">
+    <div><strong>🎧 Playlist:</strong></div>
+    <button onclick="tocar('musics/eletronic1.mp3')">Eletronic 1</button>
+    <button onclick="tocar('musics/eletronic2.mp3')">Eletronic 2</button>
+    <button onclick="tocar('musics/louvor1.mp3')">Louvor 1</button>
+    <button onclick="tocar('musics/fundo.mp3')">Fundo</button>
+    <audio id="player" controls></audio>
+  </div>
+
+  <script>
+    const player = document.getElementById("player");
+
+    function tocar(caminho) {
+      player.src = caminho;
+      player.play();
+    }
+
+    // Atualiza o iframe a cada 10 minutos
+    setInterval(() => {
+      const iframe = document.querySelector("iframe");
+      const url = new URL(iframe.src);
+      url.searchParams.set('refresh', Date.now());
+      iframe.src = url.toString();
+    }, 600000);
+  </script>
 </body>
 </html>
