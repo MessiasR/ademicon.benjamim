@@ -190,9 +190,8 @@
       valorElem.textContent = Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
       popup.style.display = "block";
       som.play();
-      setTimeout(() => {
-        som.play();
-      }, 1000);
+      setTimeout(() => som.play(), 1000);
+      setTimeout(() => som.play(), 2000);
 
       // Gerar confetes
       for (let i = 0; i < 100; i++) {
