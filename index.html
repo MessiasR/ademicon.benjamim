@@ -103,7 +103,7 @@
       background: red;
       border-radius: 50%;
       opacity: 0.7;
-      animation: cair 2s linear forwards;
+      animation: cair 15s linear forwards;
     }
 
     @keyframes cair {
@@ -112,7 +112,7 @@
         opacity: 1;
       }
       100% {
-        transform: translateY(400px) rotate(360deg);
+        transform: translateY(800px) rotate(360deg);
         opacity: 0;
       }
     }
@@ -163,6 +163,7 @@
       player.play();
     }
 
+    // Atualizar iframe a cada 10 minutos
     setInterval(() => {
       const iframe = document.querySelector("iframe");
       const url = new URL(iframe.src);
@@ -174,8 +175,16 @@
       const venda = localStorage.getItem("novaVenda");
       if (venda) {
         const { vendedor, valor } = JSON.parse(venda);
-        mostrarVenda(vendedor, valor);
         localStorage.removeItem("novaVenda");
+
+        // Atualiza iframe
+        const iframe = document.querySelector("iframe");
+        const url = new URL(iframe.src);
+        url.searchParams.set('refresh', Date.now());
+        iframe.src = url.toString();
+
+        // Espera 3 segundos e mostra popup
+        setTimeout(() => mostrarVenda(vendedor, valor), 3000);
       }
     }
 
@@ -187,27 +196,51 @@
       const container = document.getElementById("confetes");
 
       nomeElem.textContent = vendedor;
-      valorElem.textContent = Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      popup.style.display = "block";
-      som.play();
-      setTimeout(() => som.play(), 1000);
-      setTimeout(() => som.play(), 2000);
+      valorElem.textContent = Number(valor).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
 
-      // Gerar confetes
-      for (let i = 0; i < 100; i++) {
-        const confete = document.createElement("div");
-        confete.className = "confete";
-        confete.style.left = `${Math.random() * 100}%`;
-        confete.style.top = `${Math.random() * 10}%`;
-        confete.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-        confete.style.animationDelay = `${Math.random()}s`;
-        container.appendChild(confete);
+      popup.style.display = "block";
+
+      if (!player.paused) {
+        player.pause();
+        player.currentTime = 0;
       }
+
+      let toques = 0;
+      function tocarSomRepetido() {
+        if (toques < 3) {
+        som.currentTime = 0;
+        som.play();
+        toques++;
+        setTimeout(tocarSomRepetido, 1200);
+        }
+      }
+      tocarSomRepetido();
+
+
+      // Criar confetes
+      let tempoConfete = 0;
+      const intervaloConfete = setInterval(() => {
+        for (let i = 0; i < 10; i++) {
+          const confete = document.createElement("div");
+          confete.className = "confete";
+          confete.style.left = `${Math.random() * 100}%`;
+          confete.style.top = `${Math.random() * 10}%`;
+          confete.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+          confete.style.animationDelay = `${Math.random() * 1}s`;
+          container.appendChild(confete);
+        }
+        tempoConfete += 1;
+        if (tempoConfete >= 15) clearInterval(intervaloConfete);
+      }, 1000);
+
 
       setTimeout(() => {
         popup.style.display = "none";
         container.innerHTML = "";
-      }, 10000);
+      }, 15000);
     }
 
     setInterval(verificarNovaVenda, 3000);
