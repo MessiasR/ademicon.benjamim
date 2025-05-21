@@ -13,26 +13,21 @@
       flex-direction: column;
       align-items: center;
     }
-
-    h1 {
-      color: #333;
-    }
-
+    h1 { color: #333; }
     form {
       background: white;
       padding: 20px 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 400px;
+      max-width: 500px;
       width: 100%;
+      margin-bottom: 30px;
     }
-
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
     }
-
     input[type="text"], input[type="number"], input[type="password"] {
       width: 100%;
       padding: 10px;
@@ -40,7 +35,6 @@
       border: 1px solid #ccc;
       border-radius: 6px;
     }
-
     button {
       margin-top: 20px;
       padding: 10px 20px;
@@ -51,13 +45,34 @@
       cursor: pointer;
       font-weight: bold;
     }
-
     button:hover {
       background: #45a049;
     }
-
-    .hidden {
-      display: none;
+    .hidden { display: none; }
+    .venda-item {
+      background: white;
+      padding: 10px 15px;
+      margin: 5px 0;
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .venda-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .remover-btn {
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .remover-btn:hover {
+      background: #c0392b;
     }
   </style>
 </head>
@@ -77,12 +92,24 @@
     <label for="valor">Valor da Venda (R$):</label>
     <input type="number" id="valor" step="0.01" required>
 
-    <button type="submit">Lançar Venda</button>
+    <button type="button" id="addVenda">Adicionar Venda</button>
+    <button type="submit">Lançar Todas</button>
+    <button type="button" id="enviarPendentes">Lançar Vendas Pendentes</button>
   </form>
+
+  <div id="listaVendas" class="hidden">
+    <h2>Vendas a Enviar:</h2>
+    <ul id="vendasPendentes"></ul>
+  </div>
+
+  <div id="filaAtual" class="hidden">
+    <h2>Fila Atual de Vendas:</h2>
+    <ul id="filaVendas"></ul>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBtglLEILTBGsjMMu-4MgASiOPxB09J54k",
@@ -102,6 +129,12 @@
 
     const loginForm = document.getElementById("loginForm");
     const vendaForm = document.getElementById("vendaForm");
+    const listaVendas = document.getElementById("listaVendas");
+    const vendasPendentes = document.getElementById("vendasPendentes");
+    const filaAtual = document.getElementById("filaAtual");
+    const filaVendas = document.getElementById("filaVendas");
+
+    const vendas = [];
 
     loginForm.addEventListener("submit", function(e) {
       e.preventDefault();
@@ -109,32 +142,119 @@
       if (senha === senhaCorreta) {
         loginForm.classList.add("hidden");
         vendaForm.classList.remove("hidden");
+        listaVendas.classList.remove("hidden");
+        filaAtual.classList.remove("hidden");
+        carregarFilaAtual();
       } else {
         alert("Senha incorreta!");
       }
     });
 
+    document.getElementById("addVenda").addEventListener("click", () => {
+      const vendedor = document.getElementById("vendedor").value;
+      const valor = parseFloat(document.getElementById("valor").value);
+
+      if (vendedor && valor > 0) {
+        vendas.push({ vendedor, valor, timestamp: Date.now() });
+        atualizarListaPendentes();
+
+        document.getElementById("vendedor").value = '';
+        document.getElementById("valor").value = '';
+      } else {
+        alert("Preencha o nome do vendedor e um valor maior que zero.");
+      }
+    });
+
+    document.getElementById("enviarPendentes").addEventListener("click", () => {
+      if (vendas.length === 0) {
+        alert("Não há vendas pendentes para lançar.");
+        return;
+      }
+      enviarVendas();
+    });
+
     vendaForm.addEventListener("submit", function(e) {
       e.preventDefault();
       const vendedor = document.getElementById("vendedor").value;
-      const valor = document.getElementById("valor").value;
+      const valor = parseFloat(document.getElementById("valor").value);
 
-      const novaVenda = {
-        vendedor,
-        valor,
-        timestamp: Date.now()
-      };
+      if (vendedor && valor > 0) {
+        vendas.push({ vendedor, valor, timestamp: Date.now() });
+      }
 
-      set(ref(database, 'vendas/atual'), novaVenda)
-        .then(() => {
-          alert("Venda lançada com sucesso!");
-          vendaForm.reset();
-        })
-        .catch((error) => {
-          console.error("Erro ao enviar venda:", error);
-          alert("Erro ao lançar venda.");
-        });
+      if (vendas.length === 0) {
+        alert("Adicione pelo menos uma venda.");
+        return;
+      }
+
+      enviarVendas();
+      document.getElementById("vendedor").value = '';
+      document.getElementById("valor").value = '';
     });
+
+    function atualizarListaPendentes() {
+      vendasPendentes.innerHTML = "";
+      vendas.forEach((venda) => {
+        const li = document.createElement("li");
+        li.className = "venda-item";
+        li.textContent = `${venda.vendedor} - R$ ${Number(venda.valor).toFixed(2)}`;
+        vendasPendentes.appendChild(li);
+      });
+    }
+
+    function enviarVendas() {
+      vendas.forEach((venda) => {
+        push(ref(database, 'vendas/fila'), venda)
+          .then(() => console.log("Venda enviada:", venda))
+          .catch((error) => {
+            console.error("Erro ao enviar venda:", error);
+            alert("Erro ao enviar uma venda. Verifique a conexão e tente novamente.");
+          });
+      });
+      vendas.length = 0;
+      atualizarListaPendentes();
+      alert("Todas as vendas foram lançadas com sucesso!");
+    }
+
+    function carregarFilaAtual() {
+      const filaRef = ref(database, 'vendas/fila');
+      onValue(filaRef, (snapshot) => {
+        filaVendas.innerHTML = "";
+        snapshot.forEach((child) => {
+          const venda = child.val();
+          const key = child.key;
+
+          const li = document.createElement("li");
+          li.className = "venda-item";
+
+          const info = document.createElement("div");
+          info.className = "venda-info";
+
+          const valorVenda = `R$ ${Number(venda.valor).toFixed(2)}`;
+          const dataHora = new Date(venda.timestamp).toLocaleString('pt-BR');
+
+          info.innerHTML = `<strong>${venda.vendedor}</strong> - ${valorVenda}<br><small>${dataHora}</small>`;
+
+          const btnRemover = document.createElement("button");
+          btnRemover.className = "remover-btn";
+          btnRemover.textContent = "Remover";
+          btnRemover.addEventListener("click", () => {
+            if (confirm("Tem certeza que deseja remover esta venda da fila?")) {
+              remove(ref(database, `vendas/fila/${key}`))
+                .then(() => console.log("Venda removida:", key))
+                .catch((error) => {
+                  console.error("Erro ao remover venda:", error);
+                  alert("Erro ao remover venda. Tente novamente.");
+                });
+            }
+          });
+
+          li.appendChild(info);
+          li.appendChild(btnRemover);
+          filaVendas.appendChild(li);
+        });
+      });
+    }
   </script>
 </body>
 </html>
