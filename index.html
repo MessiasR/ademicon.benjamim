@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -17,6 +16,9 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
+      overflow: hidden;
+      font-family: sans-serif;
     }
 
     .div {
@@ -34,6 +36,7 @@
       display: block;
     }
 
+    /* PLAYER DE MÚSICA */
     .music-player {
       position: absolute;
       bottom: 20px;
@@ -43,9 +46,11 @@
       border-radius: 10px;
       color: black;
       font-family: sans-serif;
+      text-align: left;
       font-size: 0.8rem;
       transform: scale(0.8);
       transform-origin: bottom right;
+      z-index: 1000;
     }
 
     .music-player button {
@@ -60,11 +65,35 @@
       font-size: 0.75rem;
     }
 
+    .music-player button:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
     .music-player audio {
       width: 100%;
       margin-top: 8px;
+      background: transparent;
     }
 
+    @media (max-width: 768px) {
+      .div {
+        padding: 0;
+      }
+
+      iframe {
+        height: 100vh;
+        width: 100vw;
+      }
+
+      .music-player {
+        bottom: 10px;
+        right: 10px;
+        width: 90%;
+        transform: scale(0.75);
+      }
+    }
+
+    /* POP-UP DE VENDA */
     #popupVenda {
       display: none;
       position: fixed;
@@ -116,15 +145,6 @@
         opacity: 0;
       }
     }
-
-    @media (max-width: 768px) {
-      .music-player {
-        bottom: 10px;
-        right: 10px;
-        width: 90%;
-        transform: scale(0.75);
-      }
-    }
   </style>
 </head>
 <body>
@@ -163,87 +183,108 @@
       player.play();
     }
 
-    // Atualizar iframe a cada 10 minutos
+    // Atualiza iframe a cada 10 minutos
     setInterval(() => {
       const iframe = document.querySelector("iframe");
       const url = new URL(iframe.src);
       url.searchParams.set('refresh', Date.now());
       iframe.src = url.toString();
     }, 600000);
+  </script>
 
-    function verificarNovaVenda() {
-      const venda = localStorage.getItem("novaVenda");
-      if (venda) {
-        const { vendedor, valor } = JSON.parse(venda);
-        localStorage.removeItem("novaVenda");
+  <!-- ✅ Script Firebase com confetes -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // Atualiza iframe
-        const iframe = document.querySelector("iframe");
-        const url = new URL(iframe.src);
-        url.searchParams.set('refresh', Date.now());
-        iframe.src = url.toString();
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtglLEILTBGsjMMu-4MgASiOPxB09J54k",
+      authDomain: "vendas-benjamim.firebaseapp.com",
+      databaseURL: "https://vendas-benjamim-default-rtdb.firebaseio.com",
+      projectId: "vendas-benjamim",
+      storageBucket: "vendas-benjamim.appspot.com",
+      messagingSenderId: "724497746206",
+      appId: "1:724497746206:web:da08123fbf66ac60bfa10f",
+      measurementId: "G-N663CRJV9H"
+    };
 
-        // Espera 3 segundos e mostra popup
-        setTimeout(() => mostrarVenda(vendedor, valor), 3000);
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    const som = document.getElementById("somSino");
+    const nomeElem = document.getElementById("vendedorNome");
+    const valorElem = document.getElementById("valorVenda");
+    const popup = document.getElementById("popupVenda");
+    const container = document.getElementById("confetes");
+
+    let ultimaVenda = 0;
+    let primeiraLeitura = true;
+
+    onValue(ref(database, 'vendas/atual'), (snapshot) => {
+      const venda = snapshot.val();
+      if (!venda || !venda.timestamp) return;
+
+      if (primeiraLeitura) {
+        primeiraLeitura = false;
+        ultimaVenda = venda.timestamp;
+        return;
       }
-    }
 
-    function mostrarVenda(vendedor, valor) {
-      const popup = document.getElementById("popupVenda");
-      const nomeElem = document.getElementById("vendedorNome");
-      const valorElem = document.getElementById("valorVenda");
-      const som = document.getElementById("somSino");
-      const container = document.getElementById("confetes");
+      if (venda.timestamp === ultimaVenda) return;
+      ultimaVenda = venda.timestamp;
 
-      nomeElem.textContent = vendedor;
-      valorElem.textContent = Number(valor).toLocaleString('pt-BR', {
+      nomeElem.textContent = venda.vendedor;
+      valorElem.textContent = Number(venda.valor).toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL'
       });
 
-      popup.style.display = "block";
-
-      if (!player.paused) {
-        player.pause();
-        player.currentTime = 0;
-      }
-
-      let toques = 0;
-      function tocarSomRepetido() {
-        if (toques < 3) {
-        som.currentTime = 0;
-        som.play();
-        toques++;
-        setTimeout(tocarSomRepetido, 1200);
-        }
-      }
-      tocarSomRepetido();
-
-
-      // Criar confetes
-      let tempoConfete = 0;
-      const intervaloConfete = setInterval(() => {
-        for (let i = 0; i < 10; i++) {
-          const confete = document.createElement("div");
-          confete.className = "confete";
-          confete.style.left = `${Math.random() * 100}%`;
-          confete.style.top = `${Math.random() * 10}%`;
-          confete.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-          confete.style.animationDelay = `${Math.random() * 1}s`;
-          container.appendChild(confete);
-        }
-        tempoConfete += 1;
-        if (tempoConfete >= 15) clearInterval(intervaloConfete);
-      }, 1000);
-
+      // Atualiza iframe
+      const iframe = document.querySelector("iframe");
+      const url = new URL(iframe.src);
+      url.searchParams.set('refresh', Date.now());
+      iframe.src = url.toString();
 
       setTimeout(() => {
-        popup.style.display = "none";
-        container.innerHTML = "";
-      }, 15000);
-    }
+        popup.style.display = "block";
 
-    setInterval(verificarNovaVenda, 3000);
+        if (!player.paused) {
+          player.pause();
+          player.currentTime = 0;
+        }
+
+        let toques = 0;
+        function tocarSomRepetido() {
+          if (toques < 3) {
+            som.currentTime = 0;
+            som.play();
+            toques++;
+            setTimeout(tocarSomRepetido, 1200);
+          }
+        }
+        tocarSomRepetido();
+
+        let tempoConfete = 0;
+        const intervaloConfete = setInterval(() => {
+          for (let i = 0; i < 10; i++) {
+            const confete = document.createElement("div");
+            confete.className = "confete";
+            confete.style.left = `${Math.random() * 100}%`;
+            confete.style.top = `${Math.random() * 10}%`;
+            confete.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            confete.style.animationDelay = `${Math.random()}s`;
+            container.appendChild(confete);
+          }
+          tempoConfete += 1;
+          if (tempoConfete >= 15) clearInterval(intervaloConfete);
+        }, 1000);
+
+        setTimeout(() => {
+          popup.style.display = "none";
+          container.innerHTML = "";
+        }, 15000);
+      }, 3000);
+    });
   </script>
 </body>
 </html>

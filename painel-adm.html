@@ -80,8 +80,25 @@
     <button type="submit">Lançar Venda</button>
   </form>
 
-  <script>
-    const senhaCorreta = "Benja2024"; // Altere aqui sua senha
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtglLEILTBGsjMMu-4MgASiOPxB09J54k",
+      authDomain: "vendas-benjamim.firebaseapp.com",
+      databaseURL: "https://vendas-benjamim-default-rtdb.firebaseio.com",
+      projectId: "vendas-benjamim",
+      storageBucket: "vendas-benjamim.appspot.com",
+      messagingSenderId: "724497746206",
+      appId: "1:724497746206:web:da08123fbf66ac60bfa10f",
+      measurementId: "G-N663CRJV9H"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    const senhaCorreta = "Benja2024";
 
     const loginForm = document.getElementById("loginForm");
     const vendaForm = document.getElementById("vendaForm");
@@ -102,14 +119,21 @@
       const vendedor = document.getElementById("vendedor").value;
       const valor = document.getElementById("valor").value;
 
-      const venda = {
+      const novaVenda = {
         vendedor,
-        valor
+        valor,
+        timestamp: Date.now()
       };
 
-      localStorage.setItem("novaVenda", JSON.stringify(venda));
-      alert("Venda lançada com sucesso!");
-      vendaForm.reset();
+      set(ref(database, 'vendas/atual'), novaVenda)
+        .then(() => {
+          alert("Venda lançada com sucesso!");
+          vendaForm.reset();
+        })
+        .catch((error) => {
+          console.error("Erro ao enviar venda:", error);
+          alert("Erro ao lançar venda.");
+        });
     });
   </script>
 </body>
