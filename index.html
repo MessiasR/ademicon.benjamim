@@ -146,6 +146,7 @@
     let exibindo = false;
     let filaDeVendas = [];
 
+
     function exibirVenda(venda, vendaKey) {
       nomeElem.textContent = venda.vendedor;
       valorElem.textContent = Number(venda.valor).toLocaleString('pt-BR', {
@@ -193,6 +194,7 @@
         remove(ref(database, `vendas/fila/${vendaKey}`));
 
         exibindo = false;
+        iframe.dataset.recarregado = "";
         processarFila();
       }, 15000);
     }
