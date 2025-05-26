@@ -194,7 +194,6 @@
         remove(ref(database, `vendas/fila/${vendaKey}`));
 
         exibindo = false;
-        iframe.dataset.recarregado = "";
         processarFila();
       }, 15000);
     }
@@ -223,6 +222,10 @@
     onValue(ref(database, 'vendas/fila'), (snapshot) => {
       const fila = snapshot.val();
       filaDeVendas = [];
+
+      if (fila === null) {
+        iframe.dataset.recarregado = "";
+      } 
 
       if (fila) {
         Object.entries(fila)
