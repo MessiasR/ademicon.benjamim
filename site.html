@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADEMICON BENJAMIm</title>
+    <title>ADEMICON BENJAMIM</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
-            --primary-color: #af0808; /* Roxo */
-            --secondary-color: #9e1705; /* Azul violeta */
+            --primary-color: #af0808;
+            --secondary-color: #9e1705;
             --background-light: #f5f5f5;
             --text-dark: #333;
             --text-light: #fff;
@@ -25,9 +26,9 @@
             color: var(--text-dark);
             display: flex;
             min-height: 100vh;
+            transition: margin-left 0.3s ease;
         }
 
-        /* --- Menu Lateral (Sidebar) --- */
         .sidebar {
             width: 250px;
             background-color: var(--primary-color);
@@ -38,18 +39,84 @@
             flex-direction: column;
             border-top-right-radius: var(--border-radius-lg);
             border-bottom-right-radius: var(--border-radius-lg);
+            transition: width 0.3s ease, transform 0.3s ease, padding 0.3s ease;
+            position: relative;
+            flex-shrink: 0;
+            z-index: 99;
+        }
+
+        .sidebar.hidden {
+            width: 0;
+            padding: 0;
+            transform: translateX(-100%);
+            overflow: hidden;
+            box-shadow: none;
         }
 
         .sidebar-header {
             text-align: center;
             margin-bottom: 40px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        .sidebar-header h2 {
-            margin: 0;
-            font-weight: 600;
-            font-size: 1.8em;
+        .sidebar.hidden .sidebar-header h2,
+        .sidebar.hidden .sidebar-nav {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.1s ease, visibility 0.1s ease;
+        }
+
+        .sidebar.hidden .sidebar-nav {
+            pointer-events: none;
+        }
+
+        /* Botão padrão (menu aberto) */
+        .toggle-btn {
+            background-color: var(--secondary-color);
             color: var(--text-light);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2em;
+            position: fixed;
+            top: 20px;
+            left: 230px; /* 🔥 Quando menu aberto, fica na borda do menu */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 200;
+        }
+
+        .toggle-btn:hover {
+            background-color: #8c0c0c;
+        }
+
+        /* Quando o sidebar está escondido (botão no canto da tela) */
+        body.sidebar-hidden .toggle-btn {
+            left: 20px; /* 🔥 Vai para canto esquerdo */
+            transform: rotateY(180deg);
+            background-color: var(--primary-color);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease, width 0.3s ease;
+            margin-left: 0;
+            width: 100%;
+        }
+
+        body.sidebar-hidden .main-content {
+            width: 100%;
         }
 
         .sidebar-nav ul {
@@ -78,14 +145,6 @@
             background-color: var(--secondary-color);
             transform: translateX(5px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        /* --- Conteúdo Principal (Main Content) --- */
-        .main-content {
-            flex-grow: 1;
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
         }
 
         .content-header {
@@ -143,7 +202,6 @@
             margin-bottom: 10px;
         }
 
-        /* --- Responsividade Básica --- */
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -155,6 +213,34 @@
                 border-radius: 0;
                 padding: 15px 20px;
                 box-shadow: 0 2px 10px var(--shadow-light);
+                transform: translateX(0);
+                position: relative;
+            }
+
+            .sidebar.hidden {
+                height: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            .sidebar-header {
+                justify-content: space-between;
+            }
+
+            .toggle-btn {
+                position: static;
+                margin-left: auto;
+                transform: none;
+                top: auto;
+                right: auto;
+            }
+
+            body.sidebar-hidden .toggle-btn {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                transform: rotateY(180deg);
+                background-color: var(--primary-color);
             }
 
             .sidebar-nav ul {
@@ -188,7 +274,7 @@
     </style>
 </head>
 <body>
-    <aside class="sidebar">
+    <aside id="sidebar" class="sidebar">
         <div class="sidebar-header">
             <h2>MENU</h2>
         </div>
@@ -203,6 +289,12 @@
             </ul>
         </nav>
     </aside>
+
+    <!-- 🔥 Botão fica FORA da sidebar -->
+    <button id="toggleButton" class="toggle-btn">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
 
     <main class="main-content">
         <header class="content-header">
@@ -224,7 +316,7 @@
             <div class="category-card">
                 <span class="icon">📈</span>
                 <h3>Consórcio de Serviços</h3>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. </p>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
             </div>
             <div class="category-card">
                 <span class="icon">💡</span>
@@ -234,14 +326,53 @@
             <div class="category-card">
                 <span class="icon">⚙️</span>
                 <h3>Abrir chamado</h3>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Officia</p>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
             </div>
             <div class="category-card">
                 <span class="icon">🌐</span>
                 <h3>Tutorias</h3>
-                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Praesentium </p>
+                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p>
             </div>
         </section>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const toggleButton = document.getElementById('toggleButton');
+            const toggleIcon = toggleButton.querySelector('i');
+            const body = document.body;
+
+            toggleButton.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
+                body.classList.toggle('sidebar-hidden');
+
+                if (sidebar.classList.contains('hidden')) {
+                    toggleIcon.classList.remove('fa-chevron-left');
+                    toggleIcon.classList.add('fa-chevron-right');
+                } else {
+                    toggleIcon.classList.remove('fa-chevron-right');
+                    toggleIcon.classList.add('fa-chevron-left');
+                }
+            });
+
+            const checkMobileView = () => {
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.add('hidden');
+                    body.classList.add('sidebar-hidden');
+                    toggleIcon.classList.remove('fa-chevron-left');
+                    toggleIcon.classList.add('fa-chevron-right');
+                } else {
+                    sidebar.classList.remove('hidden');
+                    body.classList.remove('sidebar-hidden');
+                    toggleIcon.classList.remove('fa-chevron-right');
+                    toggleIcon.classList.add('fa-chevron-left');
+                }
+            };
+
+            checkMobileView();
+            window.addEventListener('resize', checkMobileView);
+        });
+    </script>
 </body>
 </html>
