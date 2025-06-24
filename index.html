@@ -4,7 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>ADEMICON BENJAMIM</title>
+  <!-- Tailwind CSS CDN for styling new elements -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Existing custom styles */
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; }
     body {
       display: flex;
@@ -12,15 +15,17 @@
       align-items: center;
       position: relative;
       overflow: hidden;
-      font-family: sans-serif;
+      font-family: 'Inter', sans-serif; /* Using Inter font as per guidelines */
     }
     .div { width: 100%; height: 100%; overflow: hidden; }
     iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    /* Music player styles, now for the report switcher button */
     .music-player {
       position: absolute;
-      bottom: 20px;
+      bottom: 60px; /* Increased bottom value to move the button down */
       right: 20px;
-      background: transparent;
+      background: transparent; /* Changed to transparent as it's just a button container now */
       padding: 8px;
       border-radius: 10px;
       color: black;
@@ -30,9 +35,13 @@
       transform: scale(0.8);
       transform-origin: bottom right;
       z-index: 1000;
+      /* Adjust flex for button centering if needed */
+      display: flex;
+      justify-content: flex-end; /* Aligns button to the right within the container */
+      align-items: center;
     }
     .music-player button {
-      background: transparent;
+      background: transparent; /* Original button styles, Tailwind will override for the new button */
       border: 1px solid black;
       color: black;
       margin: 4px 0 0 4px;
@@ -45,7 +54,7 @@
     .music-player button:hover {
       background: rgba(0, 0, 0, 0.1);
     }
-    .music-player audio { width: 100%; margin-top: 8px; background: transparent; }
+    /* .music-player audio { width: 100%; margin-top: 8px; background: transparent; } Removed as audio is disabled */
     #popupVenda {
       display: none;
       position: fixed;
@@ -80,6 +89,7 @@
 <body>
   <div class="div">
     <iframe
+      id="powerBiIframe"
       title="RESULTADO BENJAMIM"
       src="https://app.powerbi.com/reportEmbed?reportId=3b0dc507-5987-46f5-9a7f-4c5761c4d476&autoAuth=true&ctid=38ae2f02-5710-4e12-80bb-83600c3fdf1e"
       allowFullScreen="true">
@@ -95,33 +105,53 @@
 
   <audio id="somSino" src="./musics/sino.mp3" preload="auto"></audio>
 
+  <!-- Music player container, now repurposed for the report switcher button -->
   <div class="music-player">
-    <div><strong>🎧 Playlist:</strong></div>
-    <button onclick="tocar('./musics/eletronic1.mp3')">Eletronic 1</button>
-    <button onclick="tocar('./musics/eletronic2.mp3')">Eletronic 2</button>
-    <button onclick="tocar('./musics/louvor1.mp3')">Louvor 1</button>
-    <button onclick="tocar('./musics/fundo.mp3')">Fundo</button>
-    <audio id="player" controls></audio>
+    <!-- Button for switching reports, moved here and now uses an image -->
+    <button
+      id="switchReportBtn"
+      onclick="toggleReport()"
+      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 flex items-center justify-center"
+    >
+      <img src="./reload.png" alt="Alternar Relatório" class="w-8 h-8">
+    </button>
   </div>
 
   <script>
-    const player = document.getElementById("player");
-    function tocar(caminho) {
-      player.src = caminho;
-      player.play();
-    }
+    const powerBiIframe = document.getElementById("powerBiIframe");
+
+    // Existing interval to refresh the iframe
     setInterval(() => {
-      const iframe = document.querySelector("iframe");
-      const url = new URL(iframe.src);
+      const url = new URL(powerBiIframe.src);
       url.searchParams.set('refresh', Date.now());
-      iframe.src = url.toString();
-    }, 600000);
+      powerBiIframe.src = url.toString();
+    }, 600000); // Refreshes every 10 minutes
+
+    // --- New JavaScript for report switching ---
+    const primaryReportUrl = "https://app.powerbi.com/reportEmbed?reportId=3b0dc507-5987-46f5-9a7f-4c5761c4d476&autoAuth=true&ctid=38ae2f02-5710-4e12-80bb-83600c3fdf1e";
+    const secondaryReportUrl = "https://app.powerbi.com/reportEmbed?reportId=af95b36a-dddd-443f-bc1a-9eb4086e3558&autoAuth=true&embeddedDemo=true";
+    let currentReportIsPrimary = true; // Tracks which report is currently displayed
+
+    function toggleReport() {
+        if (currentReportIsPrimary) {
+            powerBiIframe.src = secondaryReportUrl;
+        } else {
+            powerBiIframe.src = primaryReportUrl;
+        }
+        currentReportIsPrimary = !currentReportIsPrimary; // Toggle the state
+        // Reset the 'recarregado' flag so the next sale popup follows the initial delay logic
+        powerBiIframe.dataset.recarregado = "";
+        console.log("Report switched to: " + powerBiIframe.src); // For debugging
+    }
+    // --- End of new JavaScript for report switching ---
+
   </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
+    // Firebase configuration (ensure this matches your project's config)
     const firebaseConfig = {
       apiKey: "AIzaSyBtglLEILTBGsjMMu-4MgASiOPxB09J54k",
       authDomain: "vendas-benjamim.firebaseapp.com",
@@ -141,11 +171,11 @@
     const valorElem = document.getElementById("valorVenda");
     const popup = document.getElementById("popupVenda");
     const container = document.getElementById("confetes");
-    const iframe = document.querySelector("iframe");
+    const iframe = document.getElementById("powerBiIframe");
+
 
     let exibindo = false;
     let filaDeVendas = [];
-
 
     function exibirVenda(venda, vendaKey) {
       nomeElem.textContent = venda.vendedor;
@@ -156,21 +186,6 @@
 
       popup.style.display = "block";
 
-      if (!player.paused) {
-        player.pause();
-        player.currentTime = 0;
-      }
-
-      /*let toques = 0;
-      function tocarSomRepetido() {
-        if (toques < 3) {
-          som.currentTime = 0;
-          som.play();
-          toques++;
-          setTimeout(tocarSomRepetido, 1200);
-        }
-      }
-      tocarSomRepetido();*/
       som.play();
 
       let tempoConfete = 0;
@@ -192,43 +207,50 @@
         popup.style.display = "none";
         container.innerHTML = "";
 
+        // Remove the processed sale from Firebase
         remove(ref(database, `vendas/fila/${vendaKey}`));
 
         exibindo = false;
-        processarFila();
-      }, 15000);
+        processarFila(); // Process the next sale in the queue
+      }, 15000); // Popup displayed for 15 seconds
     }
 
     function processarFila() {
       if (exibindo || filaDeVendas.length === 0) return;
 
       exibindo = true;
-      const { key, data } = filaDeVendas.shift();
+      const { key, data } = filaDeVendas.shift(); // Get the next sale from the queue
 
+      // Check if the iframe needs a fresh reload before displaying the sale
+      // This is triggered if the 'recarregado' flag is not set (e.g., initial load or report switch)
       if (!iframe.dataset.recarregado) {
         const url = new URL(iframe.src);
-        url.searchParams.set('refresh', Date.now());
+        url.searchParams.set('refresh', Date.now()); // Force refresh
         iframe.src = url.toString();
-        iframe.dataset.recarregado = "true";
+        iframe.dataset.recarregado = "true"; // Set flag to indicate it has been reloaded
 
-        // Espera 10 segundos antes de exibir a venda
+        // Wait 10 seconds for the Power BI report to load/refresh before showing the popup
         setTimeout(() => {
           exibirVenda(data, key);
         }, 10000);
       } else {
+        // If iframe is already 'recarregado', display sale immediately
         exibirVenda(data, key);
       }
     }
 
+    // Listen for new sales in Firebase
     onValue(ref(database, 'vendas/fila'), (snapshot) => {
       const fila = snapshot.val();
-      filaDeVendas = [];
+      filaDeVendas = []; // Clear current queue
 
+      // If no sales in queue, reset the 'recarregado' flag
       if (fila === null) {
         iframe.dataset.recarregado = "";
-      } 
+      }
 
       if (fila) {
+        // Sort sales by timestamp to process in order
         Object.entries(fila)
           .sort((a, b) => a[1].timestamp - b[1].timestamp)
           .forEach(([key, data]) => {
@@ -236,7 +258,7 @@
           });
       }
 
-      processarFila();
+      processarFila(); // Try to process the queue
     });
   </script>
 </body>
