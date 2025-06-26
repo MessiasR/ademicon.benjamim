@@ -60,21 +60,22 @@
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       background: #fff;
-      border: 4px solid #4CAF50;
+      border: 4px solid #7d1202;
       border-radius: 20px;
       padding: 40px;
       z-index: 9999;
-      font-size: 1.5rem;
+      font-size: 3rem;
       text-align: center;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
       width: 60%;
-      max-width: 600px;
+      max-width: 1200px;
     }
     #listaValoresMultiplasVendas {
       /* Centraliza o texto de cada item da lista */
       text-align: center;
       /* Remove o preenchimento padrão da lista para que o texto possa centralizar melhor */
       padding-left: 0;
+      font-size: 2rem;
     }
     #confetes { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
     .confete {
@@ -210,6 +211,8 @@
       } else {
         // Multiple sales for the same salesperson
         vendaMensagem.innerHTML = `fez <strong>${vendasDoVendedor.length}</strong> vendas:`;
+        let totalVendas = 0;
+
         vendasDoVendedor.forEach((venda, index) => {
           const li = document.createElement("li");
           li.innerHTML = `<strong>${index + 1}ª - ${Number(venda.data.valor).toLocaleString('pt-BR', {
@@ -217,7 +220,18 @@
             currency: 'BRL'
           })}</strong>`;
           listaValoresMultiplasVendas.appendChild(li);
+          totalVendas += Number(venda.data.valor);
         });
+      
+      // --- ADD THIS BLOCK FOR THE TOTAL ---
+      const totalLi = document.createElement("li");
+      totalLi.classList.add("mt-4", "font-bold", "text-3xl", "text-red-700"); // Tailwind classes for styling the total
+      totalLi.innerHTML = `TOTAL: ${totalVendas.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      })}`;
+      listaValoresMultiplasVendas.appendChild(totalLi);
+      // --- END OF TOTAL BLOCK ---
       }
 
       popup.style.display = "block";
