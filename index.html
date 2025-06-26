@@ -62,7 +62,7 @@
       background: #fff;
       border: 4px solid #7d1202;
       border-radius: 20px;
-      padding: 40px;
+      padding: 70px;
       z-index: 9999;
       /*font-size: 3rem;*/
       text-align: center;
@@ -81,6 +81,7 @@
       text-align: center;
       /* Remove o preenchimento padrão da lista para que o texto possa centralizar melhor */
       padding-left: 0;
+      margin-bottom: 25px;
       /* font-size: 2rem;*/
     }
 
@@ -103,7 +104,8 @@
 
     /* Ajuste para o TOTAL */
     #listaValoresMultiplasVendas li.font-bold.text-total-xl { /* Use a classe que você definiu para o total */
-      font-size: clamp(1.9rem, 3.5vw, 7rem); /* Min 1.8rem, ideal 3.5vw, max 3rem */
+      font-size: clamp(1.9rem, 3.5vw, 7rem);
+      margin-top: 35px; /* Min 1.8rem, ideal 3.5vw, max 3rem */
     }
 
     #confetes { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
@@ -245,7 +247,6 @@
 
         vendasDoVendedor.forEach((venda, index) => {
           const li = document.createElement("li");
-          li.classList.add("mb-3");
           li.innerHTML = `<strong>${index + 1}ª - ${Number(venda.data.valor).toLocaleString('pt-BR', {
             style: 'currency',
             currency: 'BRL'
