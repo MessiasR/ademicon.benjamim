@@ -93,7 +93,7 @@
     #popupVenda strong#vendedorNome {
       /* Use vw para o texto principal do vendedor/mensagem */
       font-size: clamp(1.9rem, 3.5vw, 7rem); /* Mantenha o tamanho da fonte */
-      color: #7d1202; /* Agora aplica a cor vermelha apenas ao strong#vendedorNome */
+      color: #941603; /* Agora aplica a cor vermelha apenas ao strong#vendedorNome */
     }
 
     #listaValoresMultiplasVendas li {
@@ -232,7 +232,8 @@
 
       if (vendasDoVendedor.length === 1) {
         // Single sale
-        vendaMensagem.innerHTML = `<br>fez uma venda de`;
+        nomeElem.innerHTML = primeiroVenda.vendedor + '<br>'
+        vendaMensagem.innerHTML = `fez uma venda de` + '<br>';
         valorElem.textContent = Number(primeiroVenda.valor).toLocaleString('pt-BR', {
           style: 'currency',
           currency: 'BRL'
