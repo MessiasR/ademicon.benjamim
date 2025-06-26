@@ -69,7 +69,7 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
 
 
-      width: 60vw;
+      width: 70vw;
       max-width: 2500px;
       min-width: 600px;
       height: auto;
@@ -87,17 +87,23 @@
     #popupVenda strong,
     #popupVenda span {
       /* Use vw para o texto principal do vendedor/mensagem */
-      font-size: clamp(1.9rem, 4vw, 7rem); /* Min 1.8rem, ideal 3.5vw, max 3rem */
+      font-size: clamp(1.9rem, 3.5vw, 7rem); /* Min 1.8rem, ideal 3.5vw, 
+      max 3rem */
+    }
+    #popupVenda strong#vendedorNome {
+      /* Use vw para o texto principal do vendedor/mensagem */
+      font-size: clamp(1.9rem, 3.5vw, 7rem); /* Mantenha o tamanho da fonte */
+      color: #7d1202; /* Agora aplica a cor vermelha apenas ao strong#vendedorNome */
     }
 
     #listaValoresMultiplasVendas li {
       /* Ajuste para os itens da lista individual */
-      font-size: clamp(1.5rem, 3.5vw, 7rem); /* Min 1.2rem, ideal 2.5vw, max 2.2rem */
+      font-size: clamp(1.5rem, 3.2vw, 6rem); /* Min 1.2rem, ideal 2.5vw, max 2.2rem */
     }
 
     /* Ajuste para o TOTAL */
     #listaValoresMultiplasVendas li.font-bold.text-total-xl { /* Use a classe que você definiu para o total */
-      font-size: clamp(1.9rem, 4vw, 8rem); /* Min 1.8rem, ideal 3.5vw, max 3rem */
+      font-size: clamp(1.9rem, 3.5vw, 7rem); /* Min 1.8rem, ideal 3.5vw, max 3rem */
     }
 
     #confetes { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
@@ -128,7 +134,7 @@
   <div id="popupVenda">
     <div id="confetes"></div>
     <div class="popup-content">
-      <strong id="vendedorNome">Vendedor</strong> <span id="vendaMensagem"></span> <strong id="valorVenda"></strong>
+      <strong id="vendedorNome">Vendedor</strong> <span id="vendaMensagem"> <class="text-red-700"> </class></span> <strong id="valorVenda"></strong>
       <ul id="listaValoresMultiplasVendas" class="text-left mt-4 text-xl" style="list-style-type: none; padding-left: 0;"></ul>
     </div>
   </div>
@@ -226,19 +232,19 @@
 
       if (vendasDoVendedor.length === 1) {
         // Single sale
-        vendaMensagem.textContent = " fez uma venda de";
+        vendaMensagem.innerHTML = `<br>fez uma venda de`;
         valorElem.textContent = Number(primeiroVenda.valor).toLocaleString('pt-BR', {
           style: 'currency',
           currency: 'BRL'
         });
       } else {
         // Multiple sales for the same salesperson
-        vendaMensagem.innerHTML = ` fez <strong>${vendasDoVendedor.length}</strong> vendas:`;
+        vendaMensagem.innerHTML = `<br>fez <strong>${vendasDoVendedor.length}</strong> vendas:`;
         let totalVendas = 0;
 
         vendasDoVendedor.forEach((venda, index) => {
           const li = document.createElement("li");
-          li.classList.add("mb-2");
+          li.classList.add("mb-3");
           li.innerHTML = `<strong>${index + 1}ª - ${Number(venda.data.valor).toLocaleString('pt-BR', {
             style: 'currency',
             currency: 'BRL'
