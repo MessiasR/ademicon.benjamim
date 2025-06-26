@@ -74,15 +74,14 @@
       min-width: 600px;
       height: auto;
       max-height: 90vh;
-      overflow-y: auto;
+      
     }
     #listaValoresMultiplasVendas {
-      /* Centraliza o texto de cada item da lista */
+      overflow-y: auto;
       text-align: center;
-      /* Remove o preenchimento padrão da lista para que o texto possa centralizar melhor */
       padding-left: 0;
       margin-bottom: 0px;
-      /* font-size: 2rem;*/
+      max-height: calc(70vh - 140px - 100px);
     }
 
     #popupVenda strong,
@@ -102,7 +101,7 @@
       font-size: clamp(1.5rem, 3.2vw, 6rem); /* Min 1.2rem, ideal 2.5vw, max 2.2rem */
       padding-top: 20px; /* Adicionado padding superior */
       padding-bottom: 20px; /* Adicionado padding inferior */
-      line-height: 1.4;
+      line-height: 1.2;
     }
 
     /* Ajuste para o TOTAL */
@@ -190,222 +189,251 @@
   </script>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    // Firebase configuration (ensure this matches your project's config)
-    const firebaseConfig = {
-      apiKey: "AIzaSyBtglLEILTBGsjMMu-4MgASiOPxB09J54k",
-      authDomain: "vendas-benjamim.firebaseapp.com",
-      databaseURL: "https://vendas-benjamim-default-rtdb.firebaseio.com",
-      projectId: "vendas-benjamim",
-      storageBucket: "vendas-benjamim.appspot.com",
-      messagingSenderId: "724497746206",
-      appId: "1:724497746206:web:da08123fbf66ac60bfa10f",
-      measurementId: "G-N663CRJV9H"
-    };
+    // Firebase configuration (ensure this matches your project's config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBtglLEILTBGsjMMu-4MgASiOPxB09J54k",
+      authDomain: "vendas-benjamim.firebaseapp.com",
+      databaseURL: "https://vendas-benjamim-default-rtdb.firebaseio.com",
+      projectId: "vendas-benjamim",
+      storageBucket: "vendas-benjamim.appspot.com",
+      messagingSenderId: "724497746206",
+      appId: "1:724497746206:web:da08123fbf66ac60bfa10f",
+      measurementId: "G-N663CRJV9H"
+    };
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
 
-    const som = document.getElementById("somSino");
-    const nomeElem = document.getElementById("vendedorNome");
-    const valorElem = document.getElementById("valorVenda");
-    const vendaMensagem = document.getElementById("vendaMensagem"); // New element for the message
-    const listaValoresMultiplasVendas = document.getElementById("listaValoresMultiplasVendas"); // New element for list of values
-    const popup = document.getElementById("popupVenda");
-    const container = document.getElementById("confetes");
-    const iframe = document.getElementById("powerBiIframe");
+    const som = document.getElementById("somSino");
+    const nomeElem = document.getElementById("vendedorNome");
+    const valorElem = document.getElementById("valorVenda");
+    const vendaMensagem = document.getElementById("vendaMensagem"); // New element for the message
+    const listaValoresMultiplasVendas = document.getElementById("listaValoresMultiplasVendas"); // New element for list of values
+    const popup = document.getElementById("popupVenda");
+    const container = document.getElementById("confetes");
+    const iframe = document.getElementById("powerBiIframe");
 
-    let exibindo = false;
-    let filaDeVendasCompleta = [];
-    let vendasEmExibicao = {};
+    let exibindo = false;
+    let filaDeVendasCompleta = [];
+    let vendasEmExibicao = {};
 
-    let debounceTimer;
-     let aguardandoProximaFila = false;
+    let debounceTimer;
+    let aguardandoProximaFila = false;
 
-    function exibirVenda(vendasDoVendedor) {
-      if (vendasDoVendedor.length === 0) return;
+    // Variáveis para controlar o scroll
+    let scrollIntervalId;
+    const POPUP_DURATION = 15000; // 15 segundos
 
-      exibindo = true;
-      aguardandoProximaFila = false;
+    function exibirVenda(vendasDoVendedor) {
+      if (vendasDoVendedor.length === 0) return;
 
-      vendasEmExibicao = vendasDoVendedor;
+      exibindo = true;
+      aguardandoProximaFila = false;
 
-      const primeiroVenda = vendasDoVendedor[0].data;
-      nomeElem.textContent = primeiroVenda.vendedor;
-      valorElem.innerHTML = ""; // Clear previous content
-      vendaMensagem.innerHTML = ""; // Clear previous content
-      listaValoresMultiplasVendas.innerHTML = ""; // Clear previous content
+      vendasEmExibicao = vendasDoVendedor;
 
-      if (vendasDoVendedor.length === 1) {
-        // Single sale
-        nomeElem.innerHTML = primeiroVenda.vendedor + '<br>'
-        vendaMensagem.innerHTML = `fez uma venda de` + '<br>';
-        valorElem.textContent = Number(primeiroVenda.valor).toLocaleString('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        });
-      } else {
-        // Multiple sales for the same salesperson
-        vendaMensagem.innerHTML = `<br>fez <strong>${vendasDoVendedor.length}</strong> vendas:`;
-        let totalVendas = 0;
+      const primeiroVenda = vendasDoVendedor[0].data;
+      nomeElem.textContent = primeiroVenda.vendedor;
+      valorElem.innerHTML = ""; // Clear previous content
+      vendaMensagem.innerHTML = ""; // Clear previous content
+      listaValoresMultiplasVendas.innerHTML = ""; // Clear previous content
 
-        vendasDoVendedor.forEach((venda, index) => {
-          const li = document.createElement("li");
-          li.innerHTML = `<strong>${index + 1}ª - ${Number(venda.data.valor).toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-          })}</strong>`;
-          listaValoresMultiplasVendas.appendChild(li);
-          totalVendas += Number(venda.data.valor);
-        });
-      
-      // --- ADD THIS BLOCK FOR THE TOTAL ---
-      const totalLi = document.createElement("li");
-      totalLi.classList.add("mt-4", "font-bold", "text-red-700"); // Tailwind classes for styling the total
-      totalLi.innerHTML = `TOTAL: ${totalVendas.toLocaleString('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      })}`;
-      listaValoresMultiplasVendas.appendChild(totalLi);
-      // --- END OF TOTAL BLOCK ---
+      if (vendasDoVendedor.length === 1) {
+        // Single sale
+        nomeElem.innerHTML = primeiroVenda.vendedor + '<br>';
+        vendaMensagem.innerHTML = `fez uma venda de` + '<br>';
+        valorElem.textContent = Number(primeiroVenda.valor).toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL'
+        });
+      } else {
+        // Multiple sales for the same salesperson
+        vendaMensagem.innerHTML = `<br>fez <strong>${vendasDoVendedor.length}</strong> vendas:`;
+        let totalVendas = 0;
+
+        vendasDoVendedor.forEach((venda, index) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${index + 1}ª - ${Number(venda.data.valor).toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+          })}</strong>`;
+          listaValoresMultiplasVendas.appendChild(li);
+          totalVendas += Number(venda.data.valor);
+        });
+      
+      // --- ADD THIS BLOCK FOR THE TOTAL ---
+      const totalLi = document.createElement("li");
+      totalLi.classList.add("mt-4", "font-bold", "text-red-700"); // Tailwind classes for styling the total
+      totalLi.innerHTML = `TOTAL: ${totalVendas.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      })}`;
+      listaValoresMultiplasVendas.appendChild(totalLi);
+      // --- END OF TOTAL BLOCK ---
+      }
+
+      popup.style.display = "block";
+      som.play();
+
+      let tempoConfete = 0;
+      const intervaloConfete = setInterval(() => {
+        for (let i = 0; i < 10; i++) {
+          const confete = document.createElement("div");
+          confete.className = "confete";
+          confete.style.left = `${Math.random() * 100}%`;
+          confete.style.top = `${Math.random() * 10}%`;
+          confete.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+          confete.style.animationDelay = `${Math.random()}s`;
+          container.appendChild(confete);
+        }
+        tempoConfete += 1;
+        if (tempoConfete >= 15) clearInterval(intervaloConfete);
+      }, 1000);
+
+      // --- Lógica de Scroll Automático AQUI ---
+      // Ativa o scroll apenas se o número de vendas for 5 ou mais
+      if (vendasDoVendedor.length >= 5) { // Nova condição
+        setTimeout(() => { // Pequeno atraso para garantir que o DOM esteja renderizado
+          console.log("Verificando scroll na lista:", listaValoresMultiplasVendas.id); // Adicionado ID para clareza
+          console.log("listaValoresMultiplasVendas.scrollHeight:", listaValoresMultiplasVendas.scrollHeight);
+          console.log("listaValoresMultiplasVendas.clientHeight:", listaValoresMultiplasVendas.clientHeight);
+          
+          if (listaValoresMultiplasVendas.scrollHeight > listaValoresMultiplasVendas.clientHeight) {
+            console.log("Conteúdo da lista maior que a área visível E número de vendas >= 5. Iniciando scroll.");
+            const scrollSpeed = 2; // Pixels por passo de rolagem (ajuste para controlar a velocidade)
+            
+            listaValoresMultiplasVendas.scrollTop = 0; // Garante que começa no topo
+
+            scrollIntervalId = setInterval(() => {
+              listaValoresMultiplasVendas.scrollTop += scrollSpeed;
+              // Se chegou ao final (ou muito perto), para de rolar
+              if (listaValoresMultiplasVendas.scrollTop + listaValoresMultiplasVendas.clientHeight >= listaValoresMultiplasVendas.scrollHeight - 5) { // Subtrai 5 para tolerância
+                listaValoresMultiplasVendas.scrollTop = listaValoresMultiplasVendas.scrollHeight - listaValoresMultiplasVendas.clientHeight; // Garante que está no final
+                clearInterval(scrollIntervalId); // PARA O SCROLL
+                scrollIntervalId = null; // Limpa a referência
+                console.log("Chegou ao final da lista, scroll parado.");
+              }
+            }, 50); // Intervalo de 50ms para rolagem (pode ajustar para mais lento/rápido)
+        } else {
+          console.log("A lista não requer scroll (scrollHeight <= clientHeight), mesmo com 5+ vendas.");
+        }
+      }, 500); // Pequeno atraso para garantir que o pop-up esteja visível e alturas calculadas
+      } else { // Se o número de vendas é menor que 5
+          console.log("Número de vendas é menor que 5. Scroll automático desativado.");
       }
 
-      popup.style.display = "block";
-      som.play();
 
-      let tempoConfete = 0;
-      const intervaloConfete = setInterval(() => {
-        for (let i = 0; i < 10; i++) {
-          const confete = document.createElement("div");
-          confete.className = "confete";
-          confete.style.left = `${Math.random() * 100}%`;
-          confete.style.top = `${Math.random() * 10}%`;
-          confete.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
-          confete.style.animationDelay = `${Math.random()}s`;
-          container.appendChild(confete);
-        }
-        tempoConfete += 1;
-        if (tempoConfete >= 15) clearInterval(intervaloConfete);
-      }, 1000);
+      setTimeout(() => {
+          if (scrollIntervalId) { // Apenas limpa se o intervalo ainda estiver ativo
+              clearInterval(scrollIntervalId); 
+              console.log("Scroll parado pelo timeout principal do popup.");
+          }
+        popup.style.display = "none";
+        container.innerHTML = "";
 
-      setTimeout(() => {
-        popup.style.display = "none";
-        container.innerHTML = "";
+        // Remove todas as vendas que foram exibidas do Firebase
+        const removePromises = vendasEmExibicao.map(venda => remove(ref(database, `vendas/fila/${venda.key}`)));
+        Promise.all(removePromises)
+          .then(() => {
+            console.log("Vendas removidas do Firebase com sucesso.");
+            exibindo = false;
+          })
+          .catch((error) => {
+            console.error("Erro ao remover vendas do Firebase:", error);
+            exibindo = false;
+            processarFila();
+          });
 
-        // Remove todas as vendas que foram exibidas do Firebase
-        // Isso vai disparar o onValue novamente, mas o debounce vai lidar com isso.
-        const removePromises = vendasEmExibicao.map(venda => remove(ref(database, `vendas/fila/${venda.key}`)));
-        Promise.all(removePromises)
-          .then(() => {
-            console.log("Vendas removidas do Firebase com sucesso.");
-            // Após a remoção e o onValue ter processado, exibindo será falso e a fila será reavaliada.
-            // Não chame processarFila aqui diretamente, deixe o onValue e o debounce cuidarem disso.
-            exibindo = false; // Resetar após a remoção ser iniciada
-          })
-          .catch((error) => {
-            console.error("Erro ao remover vendas do Firebase:", error);
-            // Em caso de erro, ainda precisamos resetar para tentar novamente
-            exibindo = false;
-            processarFila(); // Tenta processar a fila mesmo com erro de remoção
-          });
+        vendasEmExibicao = [];
+      }, POPUP_DURATION); // Popup exibido por 15 segundos
+    }
 
-        vendasEmExibicao = []; // Limpa o array de vendas em exibição
-        // Não chame processarFila() aqui. Deixe o onValue com debounce fazer isso.
-      }, 15000); // Popup exibido por 15 segundos
-    }
+    function processarFila() {
+        if (exibindo || aguardandoProximaFila) {
+            console.log("Já exibindo ou aguardando próxima fila. Pulando processarFila.");
+            return;
+        }
 
-    function processarFila() {
-        // Se já estamos exibindo algo, ou se já marcamos para aguardar a próxima fila,
-        // não inicie um novo processamento imediatamente.
-        if (exibindo || aguardandoProximaFila) {
-            console.log("Já exibindo ou aguardando próxima fila. Pulando processarFila.");
-            return;
-        }
+        if (filaDeVendasCompleta.length === 0) {
+            console.log("Fila de vendas vazia.");
+            iframe.dataset.recarregado = "";
+            return;
+        }
 
-        if (filaDeVendasCompleta.length === 0) {
-            console.log("Fila de vendas vazia.");
-            iframe.dataset.recarregado = ""; // Resetar flag se a fila está vazia
-            return;
-        }
+        const vendasAgrupadasPorVendedor = {};
+        filaDeVendasCompleta.forEach(({ key, data }) => {
+            if (!vendasAgrupadasPorVendedor[data.vendedor]) {
+                vendasAgrupadasPorVendedor[data.vendedor] = [];
+            }
+            vendasAgrupadasPorVendedor[data.vendedor].push({ key, data });
+        });
 
-        const vendasAgrupadasPorVendedor = {};
-        filaDeVendasCompleta.forEach(({ key, data }) => {
-            if (!vendasAgrupadasPorVendedor[data.vendedor]) {
-                vendasAgrupadasPorVendedor[data.vendedor] = [];
-            }
-            vendasAgrupadasPorVendedor[data.vendedor].push({ key, data });
-        });
+        let primeiroVendedorNome = null;
+        let menorTimestamp = Infinity;
 
-        let primeiroVendedorNome = null;
-        let menorTimestamp = Infinity;
+        for (const vendedor in vendasAgrupadasPorVendedor) {
+            const vendasDoVendedor = vendasAgrupadasPorVendedor[vendedor];
+            const timestampMaisAntigoDoVendedor = Math.min(...vendasDoVendedor.map(v => v.data.timestamp));
 
-        for (const vendedor in vendasAgrupadasPorVendedor) {
-            const vendasDoVendedor = vendasAgrupadasPorVendedor[vendedor];
-            const timestampMaisAntigoDoVendedor = Math.min(...vendasDoVendedor.map(v => v.data.timestamp));
+            if (timestampMaisAntigoDoVendedor < menorTimestamp) {
+                menorTimestamp = timestampMaisAntigoDoVendedor;
+                primeiroVendedorNome = vendedor;
+            }
+        }
 
-            if (timestampMaisAntigoDoVendedor < menorTimestamp) {
-                menorTimestamp = timestampMaisAntigoDoVendedor;
-                primeiroVendedorNome = vendedor;
-            }
-        }
+        if (!primeiroVendedorNome) {
+            console.log("Nenhum vendedor encontrado para processar na fila agrupada.");
+            return;
+        }
 
-        if (!primeiroVendedorNome) {
-            console.log("Nenhum vendedor encontrado para processar na fila agrupada.");
-            return;
-        }
+        const vendasDoVendedorAtual = vendasAgrupadasPorVendedor[primeiroVendedorNome];
 
-        const vendasDoVendedorAtual = vendasAgrupadasPorVendedor[primeiroVendedorNome];
+        aguardandoProximaFila = true;
 
-        // Marca que estamos prestes a exibir, o que deve impedir novas chamadas até que termine.
-        aguardandoProximaFila = true; // Define esta flag antes de exibir
+        if (!iframe.dataset.recarregado) {
+            const url = new URL(iframe.src);
+            url.searchParams.set('refresh', Date.now());
+            iframe.src = url.toString();
+            iframe.dataset.recarregado = "true";
 
-        if (!iframe.dataset.recarregado) {
-            const url = new URL(iframe.src);
-            url.searchParams.set('refresh', Date.now());
-            iframe.src = url.toString();
-            iframe.dataset.recarregado = "true";
+            setTimeout(() => {
+                exibirVenda(vendasDoVendedorAtual);
+            }, 10000);
+        } else {
+            exibirVenda(vendasDoVendedorAtual);
+        }
+    }
 
-            setTimeout(() => {
-                exibirVenda(vendasDoVendedorAtual);
-            }, 10000);
-        } else {
-            exibirVenda(vendasDoVendedorAtual);
-        }
-    }
+    onValue(ref(database, 'vendas/fila'), (snapshot) => {
+        clearTimeout(debounceTimer);
 
-    // LISTENER onValue - Principalmente inalterado, mas a interação com processarFila mudou.
-    onValue(ref(database, 'vendas/fila'), (snapshot) => {
-        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const filaRaw = snapshot.val();
+            filaDeVendasCompleta = [];
 
-        debounceTimer = setTimeout(() => {
-            const filaRaw = snapshot.val();
-            filaDeVendasCompleta = [];
+            if (filaRaw) {
+                Object.entries(filaRaw)
+                    .sort((a, b) => a[1].timestamp - b[1].timestamp)
+                    .forEach(([key, data]) => {
+                        filaDeVendasCompleta.push({ key, data });
+                    });
+            }
 
-            if (filaRaw) {
-                Object.entries(filaRaw)
-                    .sort((a, b) => a[1].timestamp - b[1].timestamp)
-                    .forEach(([key, data]) => {
-                        filaDeVendasCompleta.push({ key, data });
-                    });
-            }
+            if (filaDeVendasCompleta.length === 0) {
+                iframe.dataset.recarregado = "";
+            }
 
-            if (filaDeVendasCompleta.length === 0) {
-                iframe.dataset.recarregado = "";
-            }
+            if (!exibindo) {
+                processarFila();
+            } else {
+                console.log("onValue disparado, mas um pop-up já está exibindo. Aguardando o término.");
+            }
 
-            // Apenas chame processarFila se não estivermos já exibindo algo.
-            // Se "aguardandoProximaFila" for true, significa que uma exibição já foi agendada/está em andamento,
-            // e o próximo ciclo será ativado após o timeout de exibição.
-            if (!exibindo) {
-                processarFila();
-            } else {
-                console.log("onValue disparado, mas um pop-up já está exibindo. Aguardando o término.");
-            }
-
-        }, 300); // Ajuste este atraso conforme o necessário
-    });
-  </script>
+        }, 300);
+    });
+  </script>
 </body>
 </html>
