@@ -64,19 +64,42 @@
       border-radius: 20px;
       padding: 40px;
       z-index: 9999;
-      font-size: 3rem;
+      /*font-size: 3rem;*/
       text-align: center;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
-      width: 60%;
-      max-width: 1200px;
+
+
+      width: 50vw;
+      max-width: 1500px;
+      min-width: 600px;
+      height: auto;
+      max-height: 90vh;
+      overflow-y: auto;
     }
     #listaValoresMultiplasVendas {
       /* Centraliza o texto de cada item da lista */
       text-align: center;
       /* Remove o preenchimento padrão da lista para que o texto possa centralizar melhor */
       padding-left: 0;
-      font-size: 2rem;
+      /* font-size: 2rem;*/
     }
+
+    #popupVenda strong,
+    #popupVenda span {
+      /* Use vw para o texto principal do vendedor/mensagem */
+      font-size: clamp(1.6rem, 3.2vw, 4.5rem); /* Min 1.8rem, ideal 3.5vw, max 3rem */
+    }
+
+    #listaValoresMultiplasVendas li {
+      /* Ajuste para os itens da lista individual */
+      font-size: clamp(1.2rem, 2.5vw, 4rem); /* Min 1.2rem, ideal 2.5vw, max 2.2rem */
+    }
+
+    /* Ajuste para o TOTAL */
+    #listaValoresMultiplasVendas li.font-bold.text-total-xl { /* Use a classe que você definiu para o total */
+      font-size: clamp(1.6rem, 3.1vw, 4rem); /* Min 1.8rem, ideal 3.5vw, max 3rem */
+    }
+
     #confetes { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
     .confete {
       position: absolute;
