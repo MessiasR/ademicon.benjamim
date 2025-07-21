@@ -84,6 +84,18 @@
       max-height: calc(70vh - 140px - 100px);
     }
 
+    #fundoGifVenda {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 123, 0.4) url('/imgs/venda_fechada.gif') center center repeat;
+      background-blend-mode: multiply; /* Combina o fundo azul com o GIF */
+      overflow-y: auto;
+      z-index: 999;
+      display: none;
+    }
+
     #popupVenda strong,
     #popupVenda span {
       /* Use vw para o texto principal do vendedor/mensagem */
@@ -137,6 +149,8 @@
       allowFullScreen="true">
     </iframe>
   </div>
+
+  <div id="fundoGifVenda"></div>
 
   <div id="popupVenda">
     <div id="confetes"></div>
@@ -275,6 +289,7 @@
       // --- END OF TOTAL BLOCK ---
       }
 
+      document.getElementById("fundoGifVenda").style.display = "block";
       popup.style.display = "block";
       som.play();
 
@@ -332,6 +347,7 @@
               console.log("Scroll parado pelo timeout principal do popup.");
           }
         popup.style.display = "none";
+        document.getElementById("fundoGifVenda").style.display = "none";
         container.innerHTML = "";
 
         // Remove todas as vendas que foram exibidas do Firebase
